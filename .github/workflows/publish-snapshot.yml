@@ -16,7 +16,7 @@ jobs:
       - name: Print working directory
         run: |
           pwd
-          ls -la
+          ls -la .github/
 
       - name: Setup environment
         uses: ./.github/actions/pass-ci-setup.yml
