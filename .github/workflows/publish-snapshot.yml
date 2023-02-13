@@ -13,15 +13,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Setup Java & Maven
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: 11
-          server-id: ossrh
-          # User/pass refer to ENV VARs set below
-          server-username: MAVEN_USERNAME # Sonatype user
-          server-password: MAVEN_PASSWORD # Sonatype password # env variable for GPG private key passphrase
+      - name: Setup environment
+        uses: .github/actions/pass-ci-setup.yml
+        # with:
+        #   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # - name: Setup Java & Maven
+      #   uses: actions/setup-java@v3
+      #   with:
+      #     distribution: 'temurin'
+      #     java-version: 11
+      #     server-id: ossrh
+      #     # User/pass refer to ENV VARs set below
+      #     server-username: MAVEN_USERNAME # Sonatype user
+      #     server-password: MAVEN_PASSWORD # Sonatype password # env variable for GPG private key passphrase
       
       - name: Get project version
         id: project_version

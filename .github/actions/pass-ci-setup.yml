@@ -1,0 +1,52 @@
+# TODO: see GH Action security practices
+# https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#reusing-third-party-workflows
+name: Setup PASS GH Actions
+description: Prepare the environment of a GitHub Action for PASS
+
+inputs:
+secrets:
+  GITHUB_TOKEN:
+    required: true
+# # MAVEN_GPG_PRIVATE_KEY:
+# #   required: true
+
+# Example usage
+# - name: Use this workflow in another action
+#   uses: eclipse-pass/main/.github/pass-ci-setup.yml
+#   with:
+#     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+runs:
+  steps:
+    using: "composite"
+    steps:
+    - name: Setup Java & Maven
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: 11
+        server-id: ossrh
+        # User/pass refer to ENV VARs set below
+        # TODO: These are defined in a different step such that the settings.xml looks like:
+        #     <username>${ env.MAVEN_USERNAME }</username>
+        # where MAVEN_USERNAME is an environment variable
+        # Can we still use this and will the env vars be set in the right context to work?
+        server-username: MAVEN_USERNAME # Sonatype user
+        server-password: MAVEN_PASSWORD # Sonatype password # env variable for GPG private key passphrase
+        # gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
+        # gpg-passphrase: MAVEN_GPG_PASSPHRASE # env var, to be set elsewhere (https://github.com/jonashackt/github-actions-release-maven#complete-the-github-action-release-workflow)
+
+    - name: Cache local Maven repository
+      uses: actions/cache@v3
+      with:
+        path: ~/.m2/repository
+        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+        restore-keys: |
+          ${{ runner.os }}-maven-
+
+    - name: Login to GHCR
+      uses: docker/login-action@v2.1
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
