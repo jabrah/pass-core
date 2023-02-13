@@ -13,13 +13,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Print working directory
-        run: |
-          pwd
-          ls -la .github/actions/
-
       - name: Setup environment
-        uses: ./.github/actions/pass-ci-setup.yml
+        uses: ./.github/workflows/pass-ci-setup.yml
         # with:
         #   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

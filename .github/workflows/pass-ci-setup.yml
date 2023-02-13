@@ -1,14 +1,14 @@
 # TODO: see GH Action security practices
 # https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#reusing-third-party-workflows
 name: Setup PASS GH Actions
-description: Prepare the environment of a GitHub Action for PASS
 
-inputs:
-secrets:
-  GITHUB_TOKEN:
-    required: true
-# # MAVEN_GPG_PRIVATE_KEY:
-# #   required: true
+on:
+  workflow_call:
+    secrets:
+      GITHUB_TOKEN:
+        required: true
+    # # MAVEN_GPG_PRIVATE_KEY:
+    # #   required: true
 
 # Example usage
 # - name: Use this workflow in another action
@@ -16,9 +16,9 @@ secrets:
 #   with:
 #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-runs:
-  steps:
-    using: "composite"
+jobs:
+  setup:
+    runs-on: ubuntu-latest
     steps:
     - name: Setup Java & Maven
       uses: actions/setup-java@v3
