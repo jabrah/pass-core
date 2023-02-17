@@ -28,6 +28,7 @@ on:
 # 
 # May need a GH PAT (likely fine-grained) in order to update pass-docker with
 # new image refs
+# (Not yet used)
 #   - GH_USER
 #   - GH_PAT
 # 
@@ -75,10 +76,10 @@ jobs:
 
       - name: Commit release version bump
         run: |
-          git add **/pom.xml
-          git commit -m "Update parent version to ${{ inputs.releaseversion }}"
-          git push origin main
+          git add **/pom.xml pom.xml
+          git commit -m "Update pom versions to ${{ inputs.releaseversion }}"
 
+      # Will publish and create new Docker image for release version
       - name: Publish release
         run: |
           mvn -B -U -V -ntp release:prepare -DreleaseVersion=$RELEASE -Dtag=$RELEASE -DdevelopmentVersion=$NEXT -DautoVersionSubmodules=true
@@ -101,7 +102,11 @@ jobs:
       - name: Build and publish new dev version
         run: mvn -B -U -V -ntp clean deploy -P release
 
-        # TODO: Don't we need to `git add ...` the POMs first?
+      - name: Commit snapshot version bump
+        run: |
+          git add **/pom.xml pom.xml
+          git commit -m "Update pom versions to ${{ inputs.nextversion }}"
+
       - name: Push to updated main and new release tag GH
         run: |
           git push origin main
