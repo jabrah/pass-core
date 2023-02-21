@@ -71,9 +71,7 @@ jobs:
       # =============================================================================
       # This versions:update-parent will grab the latest release (non-snapshot)
       - name: Bump version to release
-        run: |
-          mvn -B -U -V -ntp versions:update-parent
-          mvn -B -U -V -ntp versions:update-child-modules
+        run: mvn -B -U -V -ntp versions:set -DnewVersion=${{ inputs.releaseversion }}
 
       - name: Commit release version bump
         run: |
@@ -84,7 +82,7 @@ jobs:
       - name: Publish release
         run: |
           mvn -B -U -V -ntp release:prepare -DreleaseVersion=$RELEASE -Dtag=$RELEASE -DdevelopmentVersion=$NEXT -DautoVersionSubmodules=true
-          mvn -B -U -V -ntp release:perform -Dgoals=deploy 
+          mvn -B -U -V -ntp release:perform -P release 
         env:
           # Add OSSRH_USERNAME and OSSRH_PASSWORD as GH secrets
           # https://docs.github.com/en/actions/security-guides/encrypted-secrets
@@ -96,17 +94,16 @@ jobs:
 
       - name: Update to new dev version
         run: |
-          mvn -B -U -V -ntp versions:udpate-parent -DallowSnapshots=true
-          mvn -B -U -V -ntp versions:update-child-modules -DallowSnapshots=true
+          mvn -B -U -V -ntp versions:set -DnewVersion=${{ inputs.nextversion }} -DallowSnapshots=true
       
-      # Will produce a new Docker image for the new dev version
-      - name: Build and publish new dev version
-        run: mvn -B -U -V -ntp clean deploy -P release
-
       - name: Commit snapshot version bump
         run: |
           git add **/pom.xml pom.xml
           git commit -m "Update pom versions to ${{ inputs.nextversion }}"
+
+      # Will produce a new Docker image for the new dev version
+      - name: Build and publish new dev version
+        run: mvn -B -U -V -ntp clean deploy -P release
 
       - name: Push to updated main and new release tag GH
         run: |
