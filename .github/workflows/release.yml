@@ -38,6 +38,10 @@ on:
 #   -V print maven version without stopping build
 #   -ntp (--no-transfer-progress) do not show download progress
 
+env:
+  RELEASE: ${{ inputs.releaseversion }}
+  NEXT: ${{ inputs.nextversion}}
+
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -53,6 +57,7 @@ jobs:
         run: |
           git config user.name "GH Action | Release"
           git config user.email "<>"
+          git remote -v
 
       - name: Setup Java & Maven
         uses: actions/setup-java@v3
@@ -71,12 +76,13 @@ jobs:
       # =============================================================================
       # This versions:update-parent will grab the latest release (non-snapshot)
       - name: Bump version to release
-        run: mvn -B -U -V -ntp versions:set -DnewVersion=${{ inputs.releaseversion }}
+        run: mvn -B -U -V -ntp versions:update-parent -DparentVersion=$RELEASE
 
       - name: Commit release version bump
         run: |
           git add **/pom.xml pom.xml
-          git commit -m "Update pom versions to ${{ inputs.releaseversion }}"
+          git status
+          git commit -m "Update parent version to $RELEASE"
 
       # Will publish and create new Docker image for release version
       - name: Publish release
@@ -89,17 +95,16 @@ jobs:
           MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
           MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
-          RELEASE: ${{ inputs.releaseversion }}
-          NEXT: ${{ inputs.nextversion }}
 
-      - name: Update to new dev version
-        run: |
-          mvn -B -U -V -ntp versions:set -DnewVersion=${{ inputs.nextversion }} -DallowSnapshots=true
+      # Project and submodule versions _should_ already be updated in the release step above
+      - name: Update parent POM to new dev version
+        run: mvn -B -U -V -ntp versions:update-parent -DallowSnapshots=true -DparentVersion=$NEXT
       
       - name: Commit snapshot version bump
         run: |
           git add **/pom.xml pom.xml
-          git commit -m "Update pom versions to ${{ inputs.nextversion }}"
+          git status
+          git commit -m "Update parent version to $NEXT"
 
       # Will produce a new Docker image for the new dev version
       - name: Build and publish new dev version
@@ -123,5 +128,5 @@ jobs:
 
       # - name: Push Docker image to GHCR
       #   run: |
-      #     docker push ghcr.io/eclipse-pass/pass-core-main:${{ inputs.releaseversion }}
-      #     docker push ghcr.io/eclipse-pass/pass-core-main:${{ inputs.nextversion }}
+      #     docker push ghcr.io/eclipse-pass/pass-core-main:$RELEASE
+      #     docker push ghcr.io/eclipse-pass/pass-core-main:$NEXT
