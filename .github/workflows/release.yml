@@ -18,7 +18,7 @@ on:
 # Will need to have someone with admin permissions to add some secrets:
 # Credentials for Sonatype, needs a Sonatype account.
 #   - OSSRH_USERNAME
-#   - OSSRH_TOKEN
+#   - OSSRH_PASSWORD
 # Will need GPG key + passphrase to sign artifacts for Maven Central
 #   - MAVEN_GPG_PASSPHRASE
 #   - MAVEN_GPG_KEY
@@ -34,7 +34,7 @@ on:
 # 
 # Using maven with arguments:
 #   -B (--batch-mode) non-interactive batch mode
-#   -U force dependency update
+#   -U force dependency SNAPSHOT update
 #   -V print maven version without stopping build
 #   -ntp (--no-transfer-progress) do not show download progress
 
@@ -107,7 +107,11 @@ jobs:
 
       # Will produce a new Docker image for the new dev version
       - name: Build and publish new dev version
-        run: mvn -B -U -V -ntp clean deploy -P release
+        run: mvn -B -U -V -ntp deploy -P release
+        env:
+          MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
 
       - name: Push to updated main and new release tag GH
         run: |
